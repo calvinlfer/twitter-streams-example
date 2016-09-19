@@ -6,16 +6,12 @@ This is part of the book "Reactive Web Applications" by Manuel Bernhardt with a 
 Controllers
 ===========
 
-- HomeController.scala:
+- **HomeController.scala**:
 
-  Shows how to handle simple HTTP requests.
+  Uses Twitter's streaming API with Play Iteratees to consume the data (logs it for now)
 
-- AsyncController.scala:
+- **BackpressuredHomeController.scala**:
 
-  Shows how to do asynchronous programming when handling a request.
+  Uses Twitter's streaming API with Akka Streams to consume the data (logs it for now)
 
-- CountController.scala:
-
-  Shows how to inject a component into a controller and use the component when
-  handling requests.
 
