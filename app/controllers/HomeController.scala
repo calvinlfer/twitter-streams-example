@@ -40,7 +40,7 @@ class HomeController @Inject()(config: Configuration, wsClient: WSClient, system
       case (consumerKey, requestToken) =>
         wsClient.url("https://stream.twitter.com/1.1/statuses/filter.json")
           .sign(OAuthCalculator(consumerKey, requestToken))
-          .withQueryString("track" -> "emmys")
+          .withQueryString("track" -> "reactive")
           .get {
             response =>
               Logger.info(s"Status: ${response.status}")
