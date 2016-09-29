@@ -6,6 +6,8 @@ import akka.actor.ActorSystem
 import play.api._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee._
+import play.extras.iteratees._
+import play.api.libs.json.JsObject
 import play.api.libs.oauth.{ConsumerKey, OAuthCalculator, RequestToken}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -29,9 +31,28 @@ class HomeController @Inject()(config: Configuration, wsClient: WSClient, system
     Ok(views.html.index("Your new application is ready."))
   }
 
-  val loggingIteratee = Iteratee.foreach[Array[Byte]] {
-    array => Logger.info(array.map(_.toChar).mkString)
+  val loggingIteratee = Iteratee.foreach[JsObject] {
+    json => Logger.info(json.toString)
   }
+
+  // Set up a joined iteratee (Sink) and enumerator (Source) => this is essentially an Enumeratee (Flow)
+  //                                    Flow/Enumeratee
+  //                         __________________________________________
+  //                        |                                          |
+  // Source/Enumerator ---> | Sink/Iteratee          Source/Enumerator | ---> Sink/Iteratee
+  //                        |__________________________________________|
+  val (iteratee, enumerator) = Concurrent.joined[Array[Byte]]
+
+  // tack on Iteratees/Flows to the Enumerator/Source (remember that doing this is still a Enumerator/Source)
+  // &> signifies attaching an Enumeratee/Flow to an existing Stream object
+  // Encoding.decode() is a predefined flow along with Enumeratee.grouped which repeats an Iteratee multiple times
+  // to convert it to a Flow (in Play, Iteratees (similar to Akka Streams Sinks) can produces side effect values)
+  val jsonStream = enumerator &> Encoding.decode() &> Enumeratee.grouped(JsonIteratees.jsSimpleObject)
+
+  // Hooking an Enumerator (source) to an Iteratee (sink)
+  // How are values coming in you ask? Remember the Concurrent.joined[Array[Byte]] which allows us to connect
+  // an Iteratee (Sink) producing some side effect values to an Enumerator (Source)
+  jsonStream run loggingIteratee
 
   // use Action.async so we may return a Future result
   def tweets = Action.async {
@@ -40,11 +61,12 @@ class HomeController @Inject()(config: Configuration, wsClient: WSClient, system
       case (consumerKey, requestToken) =>
         wsClient.url("https://stream.twitter.com/1.1/statuses/filter.json")
           .sign(OAuthCalculator(consumerKey, requestToken))
-          .withQueryString("track" -> "reactive")
+          .withQueryString("track" -> "cat")
           .get {
             response =>
               Logger.info(s"Status: ${response.status}")
-              loggingIteratee
+              // Play expects we consume the streaming response by providing an Iteratee to consume it
+              iteratee
           }
           .map { _ =>
             Ok("Stream closed")
