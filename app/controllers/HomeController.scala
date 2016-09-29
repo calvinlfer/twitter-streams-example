@@ -47,10 +47,11 @@ class HomeController @Inject()(config: Configuration, wsClient: WSClient, system
   // &> signifies attaching an Enumeratee/Flow to an existing Stream object
   // Encoding.decode() is a predefined flow along with Enumeratee.grouped which repeats an Iteratee multiple times
   // to convert it to a Flow (in Play, Iteratees (similar to Akka Streams Sinks) can produces side effect values)
-  val jsonStream = enumerator &> Encoding.decode() &> Enumeratee.grouped(JsonIteratees.jsSimpleObject)
+  val jsonStream: Enumerator[JsObject] = enumerator &> Encoding.decode() &> Enumeratee.grouped(JsonIteratees.jsSimpleObject)
 
   // Hooking an Enumerator (source) to an Iteratee (sink)
-  // How are values coming in you ask? Remember the Concurrent.joined[Array[Byte]] which allows us to connect
+  // How are values coming in you ask? Who is driving the Enumerator?
+  // Remember the Concurrent.joined[Array[Byte]] which allows us to connect
   // an Iteratee (Sink) producing some side effect values to an Enumerator (Source)
   jsonStream run loggingIteratee
 
