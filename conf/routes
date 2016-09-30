@@ -8,6 +8,9 @@ GET     /                           controllers.HomeController.index
 # Our Tweets endpoint
 GET     /tweets                     controllers.HomeController.tweets
 
+# Our WebSocket Tweets endpoint
+GET     /ws-tweets                  controllers.WsHomeController.streamingTweets
+
 # No routes can use Akka Streams in Play 2.4 :-(
 # GET     /backpressured-tweets       controllers.BackpressuredHomeController.tweets
 
