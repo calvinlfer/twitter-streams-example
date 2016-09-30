@@ -10,8 +10,8 @@ Controllers
 
   Uses Twitter's streaming API with Play Iteratees to consume the data (logs it for now)
 
-- **BackpressuredHomeController.scala**:
+- **WsHomeController.scala**:
 
-  Uses Twitter's streaming API with Akka Streams to consume the data (logs it for now)
+  Websocket example
 
 
