@@ -26,8 +26,11 @@ class HomeController @Inject()(config: Configuration, wsClient: WSClient, system
     * The configuration in the `routes` file means that this method
     * will be called when the application receives a `GET` request with
     * a path of `/`.
+    *
+    * We mark the request as implicit so it becomes an implicit value and Play can use it
+    * when rendering its Twirl template views
     */
-  def index = Action {
+  def index = Action { implicit request =>
     Ok(views.html.index("Your new application is ready."))
   }
 

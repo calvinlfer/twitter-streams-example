@@ -2,19 +2,27 @@
  * This template takes a single argument, a String containing a
  * message to display.
  *@
-@(message: String)
+@(message: String)(implicit request: RequestHeader)
+@main(message) {
+    <div id="tweets"></div>
+    <script type="application/javascript">
+        // obtain WebSocket URL using Play's reverse router (this gets resolved when rendering)
+        const url = "@routes.WsHomeController.streamingTweets().webSocketURL()";
 
-@*
- * Call the `main` template with two arguments. The first
- * argument is a `String` with the title of the page, the second
- * argument is an `Html` object containing the body of the page.
- *@
-@main("Welcome to Play") {
+        // set up a WebSocket connection to the Play server
+        const tweetSocket = new WebSocket(url);
 
-    @*
-     * Get an `Html` object by calling the built-in Play welcome
-     * template and passing a `String` message.
-     *@
-    @play20.welcome(message, style = "Scala")
+        // print the message onto the screen when receiving a tweet
+        tweetSocket.onmessage = event => {
+            console.log(event);
+            const data = JSON.parse(event.data);
+            const tweet = document.createElement("p");
+            const text = document.createTextNode(data.text);
+            tweet.appendChild(text);
+            document.getElementById("tweets").appendChild(tweet);
+        };
 
+        // send a subscribe message as soon as this connects
+        tweetSocket.onopen = () => tweetSocket.send("subscribe");
+    </script>
 }
