@@ -30,13 +30,18 @@
                 tweetSocket.send("subscribe");
             };
 
+            // called when the WebSocket connection is closed
             tweetSocket.onclose = () => {
+                // check connection attempts
                 if (connectionAttempt <= 3) {
                     appendTweet("Warning: Lost connection to the server");
                     appendTweet("Attempting to reconnect, Attempt: " + connectionAttempt);
+
+                    // in 5 seconds, attempt to reconnect
                     const FiveSeconds = 5000;
                     setTimeout(() => connect(connectionAttempt + 1), FiveSeconds);
                 } else {
+                    // if we have tried too many times then notify the user
                     alert("The connection to the server was lost, please try again later");
                 }
             }

@@ -55,7 +55,11 @@ object TwitterStreamer {
         val (be, _) = Concurrent.broadcast(jsonStream)
         optBroadcastEnumerator = Some(be)
 
-        val url = "https://stream.twitter.com/1.1/statuses/filter.json"
+        val url =
+          Play.configuration
+            .getString("app.master-node-url")
+            .getOrElse("https://stream.twitter.com/1.1/statuses/filter.json")
+
         WS.url(url)
           .sign(OAuthCalculator(consumerKey, requestToken))
           .withQueryString("track" -> "cat")
@@ -71,11 +75,20 @@ object TwitterStreamer {
     }
   }
 
+  // to allow Websocket clients to subscribe to Twitter Streams via our application
   def subscribe(recipient: ActorRef): Unit = {
     if (optBroadcastEnumerator.isEmpty) connect()
     // for each message received at the Iteratee (Sink), we send it to the recipient actor representing the WS client
     val twitterClient = Iteratee.foreach[JsObject] {jsObj => recipient ! jsObj}
     // connect the Enumerator to the Iteratee to create a Runnable Flow
     optBroadcastEnumerator.foreach(bE => bE run twitterClient)
+  }
+
+  // to allow replication to other nodes
+  def subscribeReplicas: Enumerator[JsObject] = {
+    if (optBroadcastEnumerator.isEmpty) {
+      connect()
+    }
+    optBroadcastEnumerator.getOrElse(Enumerator.empty[JsObject])
   }
 }

@@ -24,4 +24,10 @@ class WsHomeController @Inject()(config: Configuration, wsClient: WSClient, syst
       (out: ActorRef) =>
         TwitterStreamer.props(out)
   }
+
+  // The feed method feeds the stream provided by the enumerator as an HTTP request
+  // This is meant for replicator nodes
+  def streamReplicator = Action { implicit request =>
+    Ok.feed(TwitterStreamer.subscribeReplicas)
+  }
 }

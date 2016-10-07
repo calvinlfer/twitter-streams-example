@@ -11,6 +11,9 @@ GET     /tweets                     controllers.HomeController.tweets
 # Our WebSocket Tweets endpoint
 GET     /ws-tweets                  controllers.WsHomeController.streamingTweets
 
+# Replicated feed endpoint for master to stream to other replicas (or replicas to stream to other replicas)
+GET     /replicated-feed            controllers.WsHomeController.streamReplicator
+
 # No routes can use Akka Streams in Play 2.4 :-(
 # GET     /backpressured-tweets       controllers.BackpressuredHomeController.tweets
 
