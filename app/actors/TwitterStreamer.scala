@@ -58,7 +58,7 @@ object TwitterStreamer {
         val url = "https://stream.twitter.com/1.1/statuses/filter.json"
         WS.url(url)
           .sign(OAuthCalculator(consumerKey, requestToken))
-          .withQueryString("track" -> "cats")
+          .withQueryString("track" -> "cat")
           .get { response =>
             Logger.info("Status: " + response.status)
             // the iteratee will consume the Streaming Twitter JSON (as Array[Byte]) and feed it into the Enumerator

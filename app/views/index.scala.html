@@ -6,23 +6,41 @@
 @main(message) {
     <div id="tweets"></div>
     <script type="application/javascript">
-        // obtain WebSocket URL using Play's reverse router (this gets resolved when rendering)
-        const url = "@routes.WsHomeController.streamingTweets().webSocketURL()";
-
-        // set up a WebSocket connection to the Play server
-        const tweetSocket = new WebSocket(url);
-
-        // print the message onto the screen when receiving a tweet
-        tweetSocket.onmessage = event => {
-            console.log(event);
-            const data = JSON.parse(event.data);
+        function appendTweet(text) {
             const tweet = document.createElement("p");
-            const text = document.createTextNode(data.text);
-            tweet.appendChild(text);
+            const message = document.createTextNode(text);
+            tweet.appendChild(message);
             document.getElementById("tweets").appendChild(tweet);
-        };
+        }
 
-        // send a subscribe message as soon as this connects
-        tweetSocket.onopen = () => tweetSocket.send("subscribe");
+        function connect(attempt) {
+            let connectionAttempt = attempt;
+            const url = "@routes.WsHomeController.streamingTweets().webSocketURL()";
+            const tweetSocket = new WebSocket(url);
+
+            // print the message onto the screen when receiving a tweet
+            tweetSocket.onmessage = event => {
+                console.log(event);
+                const data = JSON.parse(event.data);
+                appendTweet(data.text);
+            };
+
+            tweetSocket.onopen = () => {
+                connectionAttempt = 1;
+                tweetSocket.send("subscribe");
+            };
+
+            tweetSocket.onclose = () => {
+                if (connectionAttempt <= 3) {
+                    appendTweet("Warning: Lost connection to the server");
+                    appendTweet("Attempting to reconnect, Attempt: " + connectionAttempt);
+                    const FiveSeconds = 5000;
+                    setTimeout(() => connect(connectionAttempt + 1), FiveSeconds);
+                } else {
+                    alert("The connection to the server was lost, please try again later");
+                }
+            }
+        }
+        connect(1);
     </script>
 }
